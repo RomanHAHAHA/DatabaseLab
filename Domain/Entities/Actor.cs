@@ -18,6 +18,8 @@ public class Actor : IEntity<Actor>
 
     public int Experience { get; set; }
 
+    public long? AgencyId { get; set; }
+
     public Actor FromReader(SqlDataReader reader)
     {
         return new Actor
@@ -27,9 +29,12 @@ public class Actor : IEntity<Actor>
             LastName = reader[nameof(LastName)].ToString() ?? string.Empty,
             MiddleName = reader[nameof(MiddleName)].ToString() ?? string.Empty,
             Rank = (ActorRank)reader[nameof(Rank)],
-            Experience = int.Parse(reader[nameof(Experience)].ToString() ?? string.Empty)
+            Experience = int.Parse(reader[nameof(Experience)].ToString() ?? string.Empty),
+            AgencyId = reader[nameof(AgencyId)] == DBNull.Value ? 
+                null : long.Parse(reader[nameof(AgencyId)].ToString() ?? string.Empty)
         };
     }
+
 
     public string GetPrimaryKeyName() => nameof(Id);
 }

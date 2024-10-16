@@ -9,10 +9,12 @@ const SpectacleForm = ({ onSpectacleCreated, spectacleToEdit, onSpectacleUpdated
 
     useEffect(() => {
         if (spectacleToEdit) {
-            setId(spectacleToEdit.id);
-            setName(spectacleToEdit.name);
-            setProductionDate(spectacleToEdit.productionDate);
-            setBudget(spectacleToEdit.budget);
+            setId(spectacleToEdit.id || null);
+            setName(spectacleToEdit.name || '');
+            setProductionDate(spectacleToEdit.productionDate || '');
+            setBudget(spectacleToEdit.budget || null);
+        } else {
+            resetForm();
         }
     }, [spectacleToEdit]);
 
@@ -47,7 +49,6 @@ const SpectacleForm = ({ onSpectacleCreated, spectacleToEdit, onSpectacleUpdated
         } else {
             const errorData = await response.json();
             if (errorData.errors) {
-                console.log(errorData.errors)
                 setErrors(errorData.errors);
             }
         }

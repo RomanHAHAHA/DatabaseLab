@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import ContractForm from '../components/Forms/ContractForm';
-import { Dropdown, DropdownToggle, DropdownMenu, DropdownItem, Table, Button, Input } from 'reactstrap';
+import ContractTable from '../components/Tables/ContractTable';
+import TableGenerator from '../components/Helpers/TableGenerator';
+import { Button, Input } from 'reactstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 const Contracts = () => {
     const [contracts, setContracts] = useState([]);
     const [contractToEdit, setContractToEdit] = useState(null);
     const [dropdownOpen, setDropdownOpen] = useState(null);
-    const [filterPrice, setFilterPrice] = useState('');
-    const [filterRole, setFilterRole] = useState('');
-    const [filterActorId, setFilterActorId] = useState('');
-    const [filterSpectacleId, setFilterSpectacleId] = useState('');
+    const [year, setYear] = useState('');
+    const [filteredData, setFilteredData] = useState([]);
 
     const toggleDropdown = (contractId) => {
         setDropdownOpen(prev => (prev === contractId ? null : contractId));
@@ -29,9 +29,32 @@ const Contracts = () => {
         }
     };
 
+    const fetchFilteredContracts = async (year) => {
+        try {
+            const response = await fetch(`/api/contracts/in-each-agency/${year}`, { method: 'GET' });
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            const data = await response.json();
+            setFilteredData(data);
+        } catch (error) {
+            console.error('Error fetching filtered contracts:', error);
+        }
+    };
+
     useEffect(() => {
         fetchContracts();
     }, []);
+
+    const handleYearChange = (event) => {
+        setYear(event.target.value);
+    };
+
+    const handleFetchFilteredContracts = () => {
+        if (year) {
+            fetchFilteredContracts(year);
+        }
+    };
 
     const deleteContract = async (id) => {
         try {
@@ -58,60 +81,6 @@ const Contracts = () => {
         fetchContracts();
     };
 
-    const filterByPrice = async () => {
-        try {
-            const response = await fetch(`/api/contracts/with-price/${filterPrice}`, { method: 'GET' });
-            if (response.ok) {
-                const data = await response.json();
-                setContracts(data);
-            }
-        } catch (error) {
-            console.error('Error filtering contracts by price:', error);
-        }
-    };
-
-    const filterByRole = async () => {
-        try {
-            const response = await fetch(`/api/contracts/with-role/${filterRole}`, { method: 'GET' });
-            if (response.ok) {
-                const data = await response.json();
-                setContracts(data);
-            }
-        } catch (error) {
-            console.error('Error filtering contracts by role:', error);
-        }
-    };
-
-    const filterByActor = async () => {
-        try {
-            const response = await fetch(`/api/contracts/of-author/${filterActorId}`, { method: 'GET' });
-            if (response.ok) {
-                const data = await response.json();
-                setContracts(data);
-            }
-        } catch (error) {
-            console.error('Error filtering contracts by actor:', error);
-        }
-    };
-
-    const filterBySpectacle = async () => {
-        try {
-            const response = await fetch(`/api/contracts/of-spectacle/${filterSpectacleId}`, { method: 'GET' });
-            if (response.ok) {
-                const data = await response.json();
-                setContracts(data);
-            }
-        } catch (error) {
-            console.error('Error filtering contracts by spectacle:', error);
-        }
-    };
-
-    const handleKeyPress = (event, filterFunction) => {
-        if (event.key === 'Enter') {
-            filterFunction();
-        }
-    };
-
     return (
         <div className="container mt-4">
             <div className="row">
@@ -125,96 +94,35 @@ const Contracts = () => {
                 </div>
 
                 <div className="col-md-8">
-                    <h2>Contracts List</h2>
-                    <div className="mb-3">
-                        <h4>Filter Contracts</h4>
-                        <div className="d-flex justify-content-between mb-2">
-                            <div className="d-flex align-items-center me-2">
-                                <Input
-                                    type="number"
-                                    placeholder="Price"
-                                    value={filterPrice}
-                                    onChange={(e) => setFilterPrice(e.target.value)}
-                                    onKeyPress={(e) => handleKeyPress(e, filterByPrice)}
-                                    style={{ width: '150px' }}
-                                />
-                                <Button className="ms-2" onClick={filterByPrice} color="primary">Filter</Button>
-                            </div>
-                            <div className="d-flex align-items-center me-2">
-                                <Input
-                                    type="text"
-                                    placeholder="Role"
-                                    value={filterRole}
-                                    onChange={(e) => setFilterRole(e.target.value)}
-                                    onKeyPress={(e) => handleKeyPress(e, filterByRole)}
-                                    style={{ width: '150px' }}
-                                />
-                                <Button className="ms-2" onClick={filterByRole} color="primary">Filter</Button>
-                            </div>
-                        </div>
-                        <div className="d-flex justify-content-between mb-2">
-                            <div className="d-flex align-items-center me-2">
-                                <Input
-                                    type="number"
-                                    placeholder="Actor ID"
-                                    value={filterActorId}
-                                    onChange={(e) => setFilterActorId(e.target.value)}
-                                    onKeyPress={(e) => handleKeyPress(e, filterByActor)}
-                                    style={{ width: '150px' }}
-                                />
-                                <Button className="ms-2" onClick={filterByActor} color="primary">Filter</Button>
-                            </div>
-                            <div className="d-flex align-items-center me-2">
-                                <Input
-                                    type="number"
-                                    placeholder="Spectacle ID"
-                                    value={filterSpectacleId}
-                                    onChange={(e) => setFilterSpectacleId(e.target.value)}
-                                    onKeyPress={(e) => handleKeyPress(e, filterBySpectacle)}
-                                    style={{ width: '150px' }}
-                                />
-                                <Button className="ms-2" onClick={filterBySpectacle} color="primary">Filter</Button>
-                            </div>
-                        </div>
+                    <div className="mb-4">
+                        <h2>Contracts List</h2>
+                        {contracts.length === 0 ? (
+                            <p>No contracts available.</p>
+                        ) : (
+                            <ContractTable
+                                contracts={contracts}
+                                onEdit={handleEditContract}
+                                onDelete={deleteContract}
+                                dropdownOpen={dropdownOpen}
+                                toggleDropdown={toggleDropdown}
+                            />
+                        )}
                     </div>
-                    {contracts.length === 0 ? (
-                        <p>No contracts available.</p>
-                    ) : (
-                        <Table striped bordered>
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Actor ID</th>
-                                    <th>Spectacle ID</th>
-                                    <th>Role</th>
-                                    <th>Annual Contract Price</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {contracts.map(contract => (
-                                    <tr key={contract.id}>
-                                        <td>{contract.id}</td>
-                                        <td>{contract.actorId}</td>
-                                        <td>{contract.spectacleId}</td>
-                                        <td>{contract.role}</td>
-                                        <td>{contract.annualContractPrice}</td>
-                                        <td>
-                                            <Dropdown isOpen={dropdownOpen === contract.id} toggle={() => toggleDropdown(contract.id)}>
-                                                <DropdownToggle caret>
-                                                    Actions
-                                                </DropdownToggle>
-                                                <DropdownMenu>
-                                                    <DropdownItem onClick={() => handleEditContract(contract)}>Update</DropdownItem>
-                                                    <DropdownItem onClick={() => deleteContract(contract.id)}>Delete</DropdownItem>
-                                                </DropdownMenu>
-                                            </Dropdown>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </Table>
-                    )}
+
+                    <div>
+                        <h2>Get Contract Counts by Agency for a Year</h2>
+                        <Input
+                            type="number"
+                            placeholder="Enter Year"
+                            value={year}
+                            onChange={handleYearChange}
+                        />
+                        <Button color="primary" onClick={handleFetchFilteredContracts} className="mt-2">
+                            Fetch Contracts
+                        </Button>
+
+                        <TableGenerator data={filteredData} />
+                    </div>
                 </div>
             </div>
         </div>

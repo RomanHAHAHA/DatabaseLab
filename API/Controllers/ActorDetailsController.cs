@@ -8,9 +8,9 @@ namespace DatabaseLab.API.Controllers;
 [Route("api/actor-details")]
 [ApiController]
 public class ActorDetailsController(
-    IRepository<ActorDetail> actorDetailsRepository) : ControllerBase
+    IActorDetailRepository actorDetailsRepository) : ControllerBase
 {
-    private readonly IRepository<ActorDetail> _actorDetailsRepository = actorDetailsRepository;
+    private readonly IActorDetailRepository _actorDetailsRepository = actorDetailsRepository;
 
     [HttpPost("create")]
     public async Task<IActionResult> Create(ActorDetailsCreateDto actorDetailsDto)
@@ -81,4 +81,8 @@ public class ActorDetailsController(
 
         return Ok();
     }
+
+    [HttpGet("by-agency/{agencyId}")]
+    public async Task<IEnumerable<ActorWithPhone>> GetActorDetailsByAgencyId(long agencyId)
+        => await _actorDetailsRepository.GetActorDetailsByAgencyId(agencyId);
 }

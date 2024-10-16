@@ -1,20 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import ActorForm from '../components/Forms/ActorForm';
-import ActorsSearchForm from '../components/Forms/ActorSearchForm';
 import ActorTable from '../components/Tables/ActorTable';
-import ActorsWithContractInfoTable from '../components/Tables/ActorsWithContractInfoTable';
-import ActorsWithPrivateDataTable from '../components/Tables/ActorsWithPrivateDataTable';
+import TableGenerator from '../components/Helpers/TableGenerator';
 import { Button, InputGroup, InputGroupText, Input } from 'reactstrap';
 
 const Actors = () => {
     const [actors, setActors] = useState([]);
-    const [actorsWithContracts, setActorsWithContracts] = useState([]);
-    const [actorsWithPrivateData, setActorsWithPrivateData] = useState([]);
+    const [filteredData, setFilteredData] = useState([]); 
     const [actorToEdit, setActorToEdit] = useState(null);
     const [dropdownOpen, setDropdownOpen] = useState(null);
-    const [searchPrefix, setSearchPrefix] = useState('');
-    const [searchExperience, setSearchExperience] = useState('');
-    const [searchRank, setSearchRank] = useState('');
     const [minAverageContractPrice, setMinAverageContractPrice] = useState('');
 
     const toggleDropdown = (actorId) => {
@@ -32,48 +26,12 @@ const Actors = () => {
         }
     };
 
-    const fetchActorsByPrefix = async () => {
-        if (!searchPrefix) return;
-        try {
-            const response = await fetch(`/api/actors/get-by-prefix/${searchPrefix}`);
-            if (!response.ok) throw new Error('Failed to fetch actors by prefix');
-            const data = await response.json();
-            setActors(data);
-        } catch (error) {
-            console.error(error);
-        }
-    };
-
-    const fetchActorsByExperience = async () => {
-        if (!searchExperience) return;
-        try {
-            const response = await fetch(`/api/actors/get-by-experience/${searchExperience}`);
-            if (!response.ok) throw new Error('Failed to fetch actors by experience');
-            const data = await response.json();
-            setActors(data);
-        } catch (error) {
-            console.error(error);
-        }
-    };
-
-    const fetchActorsByRank = async () => {
-        if (!searchRank) return;
-        try {
-            const response = await fetch(`/api/actors/get-by-rank/${searchRank}`);
-            if (!response.ok) throw new Error('Failed to fetch actors by rank');
-            const data = await response.json();
-            setActors(data);
-        } catch (error) {
-            console.error(error);
-        }
-    };
-
     const fetchActorsWithContracts = async (minPrice) => {
         try {
             const response = await fetch(`/api/actors/with-contract-data/${minPrice}`);
             if (!response.ok) throw new Error('Failed to fetch actors with contracts');
             const data = await response.json();
-            setActorsWithContracts(data);
+            setFilteredData(data); 
         } catch (error) {
             console.error(error);
         }
@@ -84,7 +42,7 @@ const Actors = () => {
             const response = await fetch('/api/actors/with-private-data');
             if (!response.ok) throw new Error('Failed to fetch actors with private data');
             const data = await response.json();
-            setActorsWithPrivateData(data);
+            setFilteredData(data); 
         } catch (error) {
             console.error(error);
         }
@@ -106,7 +64,6 @@ const Actors = () => {
 
     useEffect(() => {
         fetchAllActors();
-        fetchActorsWithPrivateData();
     }, []);
 
     return (
@@ -120,18 +77,6 @@ const Actors = () => {
                     />
                 </div>
                 <div className="col-md-8">
-                    <ActorsSearchForm
-                        searchPrefix={searchPrefix}
-                        setSearchPrefix={setSearchPrefix}
-                        searchExperience={searchExperience}
-                        setSearchExperience={setSearchExperience}
-                        searchRank={searchRank}
-                        setSearchRank={setSearchRank}
-                        fetchActorsByPrefix={fetchActorsByPrefix}
-                        fetchActorsByExperience={fetchActorsByExperience}
-                        fetchActorsByRank={fetchActorsByRank}
-                    />
-
                     <h4>Actors List</h4>
                     <ActorTable
                         actors={actors}
@@ -139,23 +84,30 @@ const Actors = () => {
                         deleteActor={deleteActor}
                         toggleDropdown={toggleDropdown}
                         dropdownOpen={dropdownOpen}
+                        fetchActors={fetchAllActors}
                     />
 
                     <h4>Actors with Contract Data</h4>
                     <InputGroup className="mb-3" size="sm">
-                        <Input 
-                            placeholder="Min Contract Price" 
-                            value={minAverageContractPrice} 
-                            onChange={e => setMinAverageContractPrice(e.target.value)} 
+                        <Input
+                            placeholder="Min Contract Price"
+                            value={minAverageContractPrice}
+                            onChange={e => setMinAverageContractPrice(e.target.value)}
                         />
                         <InputGroupText>
-                            <Button color="primary" onClick={() => fetchActorsWithContracts(minAverageContractPrice)}>Load</Button>
+                            <Button color="primary" onClick={() => fetchActorsWithContracts(minAverageContractPrice)}>
+                                Load Actors with Contracts
+                            </Button>
                         </InputGroupText>
                     </InputGroup>
-                    <ActorsWithContractInfoTable actorsWithContracts={actorsWithContracts} />
 
                     <h4>Actors with Private Data</h4>
-                    <ActorsWithPrivateDataTable actorsWithPrivateData={actorsWithPrivateData} />
+                    <Button color="secondary" onClick={fetchActorsWithPrivateData}>
+                        Load Actors with Private Data
+                    </Button>
+
+                    <h4>Filtered Data</h4>
+                    <TableGenerator data={filteredData} /> 
                 </div>
             </div>
         </div>

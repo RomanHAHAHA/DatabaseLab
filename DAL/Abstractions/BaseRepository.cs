@@ -12,13 +12,29 @@ public abstract class BaseRepository<T>(string connectionString) :
 
     protected SqlConnection CreateConnection() => new(_connectionString);
 
+    private static readonly Dictionary<string, string> TableNameMappings = new()
+    {
+        { "Agency", "Agencies" },
+    };
+
+    private string TableName
+    {
+        get
+        {
+            var typeName = typeof(T).Name;
+
+            return TableNameMappings.TryGetValue(typeName, out string? value) ?
+                value : $"{typeName}s";
+        }
+    }
+
     public virtual async Task<bool> CreateAsync(T entity)
     {
         var properties = typeof(T).GetProperties().Where(p => p.Name != entity.GetPrimaryKeyName()); 
         var columnNames = string.Join(", ", properties.Select(p => p.Name));
         var parameters = string.Join(", ", properties.Select(p => $"@{p.Name}"));
 
-        var query = $"INSERT INTO {typeof(T).Name}s ({columnNames}) VALUES ({parameters})";
+        var query = $"INSERT INTO {TableName} ({columnNames}) VALUES ({parameters})";
 
         using var connection = CreateConnection();
         await connection.OpenAsync();
@@ -38,7 +54,7 @@ public abstract class BaseRepository<T>(string connectionString) :
     public virtual async Task<T?> GetByIdAsync(long id)
     {
         var primaryKeyName = new T().GetPrimaryKeyName();
-        var query = $"SELECT * FROM {typeof(T).Name}s WHERE {primaryKeyName} = @{primaryKeyName}";
+        var query = $"SELECT * FROM {TableName} WHERE {primaryKeyName} = @{primaryKeyName}";
 
         using var connection = CreateConnection();
         await connection.OpenAsync();
@@ -57,7 +73,7 @@ public abstract class BaseRepository<T>(string connectionString) :
 
     public virtual async Task<IQueryable<T>> GetAllAsync()
     {
-        var query = $"SELECT * FROM {typeof(T).Name}s";
+        var query = $"SELECT * FROM {TableName}";
 
         using var connection = CreateConnection();
         await connection.OpenAsync();
@@ -82,7 +98,7 @@ public abstract class BaseRepository<T>(string connectionString) :
         var properties = typeof(T).GetProperties().Where(p => p.Name != primaryKeyName); 
         var updateFields = string.Join(", ", properties.Select(p => $"{p.Name} = @{p.Name}"));
 
-        var query = $"UPDATE {typeof(T).Name}s SET {updateFields} " +
+        var query = $"UPDATE {TableName} SET {updateFields} " +
             $"WHERE {primaryKeyName} = @{primaryKeyName}";
 
         using var connection = CreateConnection();
@@ -108,7 +124,7 @@ public abstract class BaseRepository<T>(string connectionString) :
     public virtual async Task<bool> RemoveAsync(long id)
     {
         var primaryKeyName = new T().GetPrimaryKeyName();
-        var query = $"DELETE FROM {typeof(T).Name}s WHERE {primaryKeyName} = @{primaryKeyName}";
+        var query = $"DELETE FROM {TableName} WHERE {primaryKeyName} = @{primaryKeyName}";
 
         using var connection = CreateConnection();
         await connection.OpenAsync();

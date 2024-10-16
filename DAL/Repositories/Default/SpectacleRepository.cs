@@ -1,5 +1,6 @@
 ﻿using DatabaseLab.DAL.Abstractions;
 using DatabaseLab.DAL.Interfaces;
+using DatabaseLab.Domain.Dtos.ActorDtos;
 using DatabaseLab.Domain.Dtos.SpectacleDtos;
 using DatabaseLab.Domain.Entities;
 using DatabaseLab.Domain.Options;
@@ -35,101 +36,6 @@ public class SpectacleRepository(IOptions<DbOptions> dbOptions) :
         var rowsAfferted = await command.ExecuteNonQueryAsync();
 
         return rowsAfferted > 0;
-    }
-
-    public async Task<IEnumerable<Spectacle>> GetSpectaclesWithBudgetGreaterThan(decimal minBudget)
-    {
-        const string sqlQuery = @"
-            SELECT * 
-            FROM Spectacles 
-            WHERE Budget > @MinBudget 
-            ORDER BY ProductionDate DESC";
-
-        using var connection = CreateConnection();
-
-        if (connection is null)
-        {
-            return [];
-        }
-
-        await connection.OpenAsync();
-
-        using var command = connection.CreateCommand();
-
-        command.CommandText = sqlQuery;
-        command.Parameters.Add(new SqlParameter("@MinBudget", minBudget));
-
-        using var reader = await command.ExecuteReaderAsync();
-        var spectacles = new List<Spectacle>();
-
-        while (await reader.ReadAsync())
-        {
-            spectacles.Add(new Spectacle().FromReader(reader));
-        }
-
-        return spectacles;
-    }
-
-    public async Task<IEnumerable<Spectacle>> GetSpectaclesWithProductionDate(int productionDate)
-    {
-        const string sqlQuery = @"
-            SELECT * 
-            FROM Spectacles 
-            WHERE ProductionDate = @ProductionDate 
-            ORDER BY Budget";
-
-        using var connection = CreateConnection();
-
-        if (connection is null)
-        {
-            return [];
-        }
-
-        await connection.OpenAsync();
-
-        using var command = connection.CreateCommand();
-        command.CommandText = sqlQuery;
-        command.Parameters.Add(new SqlParameter("@ProductionDate", productionDate));
-
-        using var reader = await command.ExecuteReaderAsync();
-
-        var spectacles = new List<Spectacle>();
-
-        while (await reader.ReadAsync())
-        {
-            spectacles.Add(new Spectacle().FromReader(reader));
-        }
-
-        return spectacles;
-    }
-
-    public async Task<IEnumerable<Spectacle>> GetSpectaclesByNameStartsWith(string prefix)
-    {
-        const string sqlQuery = "SELECT * FROM Spectacles WHERE Name LIKE @Prefix";
-        using var connection = CreateConnection();
-
-        if (connection is null)
-        {
-            return [];
-        }
-
-        await connection.OpenAsync();
-
-        using var command = connection.CreateCommand();
-
-        command.CommandText = sqlQuery;
-        command.Parameters.Add(new SqlParameter("@Prefix", $"{prefix}%"));
-
-        using var reader = await command.ExecuteReaderAsync();
-
-        var spectacles = new List<Spectacle>();
-
-        while (await reader.ReadAsync())
-        {
-            spectacles.Add(new Spectacle().FromReader(reader));
-        }
-
-        return spectacles;
     }
 
     public async Task<IEnumerable<SpectacleTotalDto>> GetTotalSpectaclesInfo(
@@ -170,4 +76,44 @@ public class SpectacleRepository(IOptions<DbOptions> dbOptions) :
 
         return spectacles;
     }
+
+    public async Task<IEnumerable<ActorWithAgencyInfo>> GetActorsWithAgencyName(long spectacleId)
+    {
+        const string sqlQuery = @"
+            SELECT 
+                a.Id AS ActorId,
+                a.FirstName,
+                a.LastName,
+                ag.Name AS AgencyName,
+                c.Role AS Role,  
+                c.AnnualContractPrice AS ContractPrice
+            FROM Actors a
+            LEFT JOIN Agencies ag ON a.AgencyId = ag.Id
+            JOIN Contracts c ON a.Id = c.ActorId
+            WHERE c.SpectacleId = @SpectacleId;";
+
+        using var connection = CreateConnection();
+
+        if (connection is null)
+        {
+            return [];
+        }
+
+        await connection.OpenAsync();
+
+        using var command = connection.CreateCommand();
+        command.CommandText = sqlQuery;
+        command.Parameters.AddWithValue("@SpectacleId", spectacleId); 
+
+        using var reader = await command.ExecuteReaderAsync();
+        var actors = new List<ActorWithAgencyInfo>();
+
+        while (await reader.ReadAsync())
+        {
+            actors.Add(ActorWithAgencyInfo.FromReader(reader));
+        }
+
+        return actors;
+    }
+
 }

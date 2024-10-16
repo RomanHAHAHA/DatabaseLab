@@ -5,103 +5,57 @@ using DatabaseLab.Services.Interfaces;
 namespace DatabaseLab.Services.Implementations;
 
 public class CacheService(
-    IMemoryCache memoryCache, 
+    IMemoryCache memoryCache,
     ILogger<CacheService> logger) : ICacheService
 {
     private static readonly ConcurrentDictionary<string, bool> CacheKeys = new();
 
-    private readonly IMemoryCache _memoryCache = memoryCache; 
+    private readonly IMemoryCache _memoryCache = memoryCache;
     private readonly ILogger<CacheService> _logger = logger;
 
-    public Task SetAsync<T>(
-        string key,
-        T data,
-        TimeSpan expiration) where T : class
+    public Task<string> SetAsync<T>(T data) where T : class
     {
-        _memoryCache.Set(key, data, expiration); 
+        var cacheKey = Guid.NewGuid().ToString(); 
+        _memoryCache.Set(cacheKey, data); 
 
-        CacheKeys.TryAdd(key, false); // Добавляем ключ в список кэшированных
-        _logger.LogInformation($"Cache [{key}] set.");
+        CacheKeys.TryAdd(cacheKey, false); 
+        _logger.LogInformation($"Cache [{cacheKey}] set with no expiration.");
 
-        LogAllKeys(); // Логируем все ключи
+        LogAllKeys(); 
 
-        return Task.CompletedTask;
+        return Task.FromResult(cacheKey); 
     }
 
-    // Метод для получения данных из кэша в памяти
-    public Task<T?> GetAsync<T>(string key) where T : class
+    public Task<List<T>> GetAllAsync<T>() where T : class
     {
-        if (_memoryCache.TryGetValue(key, out T? cachedValue))
+        var allValues = new List<T>();
+
+        foreach (var key in CacheKeys.Keys)
         {
-            _logger.LogInformation($"Cache hit for key [{key}].");
-            return Task.FromResult(cachedValue);
+            if (_memoryCache.TryGetValue(key, out T? cachedValue) && 
+                cachedValue is not null)
+            {
+                allValues.Add(cachedValue);
+            }
         }
 
-        _logger.LogInformation($"Cache miss for key [{key}].");
-        return Task.FromResult<T?>(null);
+        return Task.FromResult(allValues);
     }
 
-    // Метод для получения данных с фабрикой (если данных в кэше нет)
-    public async Task<T?> GetAsync<T>(
-        string key,
-        Func<Task<T?>> factory,
-        TimeSpan expiration) where T : class
-    {
-        var cachedValue = await GetAsync<T>(key);
-
-        if (cachedValue is not null)
-        {
-            return cachedValue;
-        }
-
-        var newValue = await factory();
-
-        if (newValue is not null)
-        {
-            await SetAsync(key, newValue, expiration); // Установка нового значения в кэш
-            return newValue;
-        }
-
-        return null;
-    }
-
-    // Метод для удаления данных из кэша
     public Task RemoveAsync(string key)
     {
-        _memoryCache.Remove(key); // Удаление из памяти
-        CacheKeys.TryRemove(key, out bool _); // Удаление из списка ключей
+        _memoryCache.Remove(key); 
+        CacheKeys.TryRemove(key, out bool _);
 
         _logger.LogInformation($"Cache [{key}] removed.");
-
-        LogAllKeys(); // Логируем оставшиеся ключи
-
-        return Task.CompletedTask;
-    }
-
-    // Удаление по префиксу
-    public Task RemoveByPrefixAsync(string prefix)
-    {
-        var keysToRemove = CacheKeys.Keys
-            .Where(k => k.StartsWith(prefix))
-            .ToList();
-
-        foreach (var key in keysToRemove)
-        {
-            _memoryCache.Remove(key); // Удаление ключа из кэша
-            CacheKeys.TryRemove(key, out bool _); // Удаление ключа из списка
-        }
-
-        _logger.LogInformation($"All cache keys with prefix [{prefix}] removed.");
-
-        LogAllKeys(); // Логируем оставшиеся ключи
+        LogAllKeys(); 
 
         return Task.CompletedTask;
     }
 
-    // Метод для логирования всех текущих ключей в кэше
-    public void LogAllKeys()
+    private void LogAllKeys()
     {
-        if (!CacheKeys.Any())
+        if (CacheKeys.IsEmpty)
         {
             _logger.LogInformation("No cache keys present in memory.");
         }

@@ -9,33 +9,37 @@ const context =  [
   "/api/actors/create",
   "/api/actors/delete",
   "/api/actors/update",
-  "/api/actors/get-by-prefix",
-  "/api/actors/get-by-experience",
-  "/api/actors/get-by-rank",
   "/api/actors/with-contract-data",
   "/api/actors/with-private-data",
+  "/api/actors/add-to-agency",
+  "/api/actors/with-max-contract-price",
 
   "/api/spectacles/update",
   "/api/spectacles/delete",
   "/api/spectacles/create",
   "/api/spectacles/get-all",
-  "/api/spectacles/with-budget",
-  "/api/spectacles/with-production-year",
-  "/api/spectacles/with-prefix",
+  "/api/spectacles/with-total-info",
+  "/api/spectacles/with-actor-agency-name",
 
   "/api/contracts/update",
   "/api/contracts/delete",
   "/api/contracts/create",
   "/api/contracts/get-all",
-  "/api/contracts/with-price",
-  "/api/contracts/with-role",
-  "/api/contracts/of-author",
-  "/api/contracts/of-spectacle",
+  "/api/contracts/in-each-agency",
 
   "/api/actor-details/create",
   "/api/actor-details/update",
   "/api/actor-details/delete",
   "/api/actor-details/get-all",
+  "/api/actor-details/by-agency",
+
+  "/api/agencies/create",
+  "/api/agencies/update",
+  "/api/agencies/delete",
+  "/api/agencies/get-all",
+  "/api/agencies/with-actor-groups",
+
+  "/api/reports/generate-report",
 ];
 
 module.exports = function(app) {

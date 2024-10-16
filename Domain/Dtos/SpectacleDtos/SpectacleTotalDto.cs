@@ -4,9 +4,9 @@ namespace DatabaseLab.Domain.Dtos.SpectacleDtos;
 
 public class SpectacleTotalDto
 {
-    public long Id { get; set; }
+    public long SpectacleId { get; set; }
 
-    public string Name { get; set; } = string.Empty;
+    public string SpectacleName { get; set; } = string.Empty;
 
     public int ContractCount { get; set; }
 
@@ -16,8 +16,8 @@ public class SpectacleTotalDto
     {
         return new SpectacleTotalDto
         {
-            Id = long.Parse(reader[nameof(Id)].ToString() ?? string.Empty),
-            Name = reader[nameof(Name)].ToString() ?? string.Empty,
+            SpectacleId = long.Parse(reader[nameof(SpectacleId)].ToString() ?? string.Empty),
+            SpectacleName = reader[nameof(SpectacleName)].ToString() ?? string.Empty,
             ContractCount = int.Parse(reader[nameof(ContractCount)].ToString() ?? string.Empty),
             TotalContractPrice = decimal.Parse(reader[nameof(TotalContractPrice)].ToString() ?? string.Empty),
         };

@@ -1,8 +1,13 @@
 using DatabaseLab.API.Middlewares;
 using DatabaseLab.DAL.Interfaces;
 using DatabaseLab.DAL.Repositories.Default;
+using DatabaseLab.DAL.Repositories.Logging;
 using DatabaseLab.Domain.Entities;
 using DatabaseLab.Domain.Options;
+using DatabaseLab.Services.Implementations;
+using DatabaseLab.Services.Interfaces;
+using DinkToPdf;
+using DinkToPdf.Contracts;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,9 +18,28 @@ builder.Services
     .GetSection(nameof(DbOptions)));
 
 builder.Services.AddScoped<IActorRepository, ActorRepository>();
+builder.Services.Decorate<IActorRepository, LoggingActorRepository>();
+
 builder.Services.AddScoped<ISpectacleRepository, SpectacleRepository>();
+builder.Services.Decorate<ISpectacleRepository, LoggingSpectacleRepository>();
+
 builder.Services.AddScoped<IContractRepository, ContractRepository>();
-builder.Services.AddScoped<IRepository<ActorDetail>, ActorDetailsRepository>();
+builder.Services.Decorate<IContractRepository, LoggingContractRepository>();
+
+builder.Services.AddScoped<IActorDetailRepository, ActorDetailsRepository>();
+builder.Services.Decorate<IActorDetailRepository, LoggingActorDetailsRepository>();
+
+builder.Services.AddScoped<IAgencyRepository, AgencyRepository>();
+builder.Services.Decorate<IAgencyRepository, LoggingAgencyRepository>();
+
+builder.Services.AddMemoryCache();
+builder.Services.AddSingleton<IReportService, ReportService>();
+builder.Services.AddSingleton<ICacheService, CacheService>();
+builder.Services.AddSingleton<IPdfGenerator, PdfGenerator>();
+builder.Services.AddSingleton<IConverter, SynchronizedConverter>(sp =>
+{
+    return new SynchronizedConverter(new PdfTools());
+});
 
 var app = builder.Build();
 

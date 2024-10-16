@@ -1,4 +1,5 @@
 ﻿using DatabaseLab.DAL.Interfaces;
+using DatabaseLab.Domain.Dtos.ActorDtos;
 using DatabaseLab.Domain.Dtos.SpectacleDtos;
 using DatabaseLab.Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
@@ -7,15 +8,12 @@ namespace DatabaseLab.API.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class SpectaclesController : ControllerBase
+public class SpectaclesController(
+    ISpectacleRepository spectacleRepository) : ControllerBase
 {
-    private readonly ISpectacleRepository _spectacleRepository;
+    private readonly ISpectacleRepository _spectacleRepository = spectacleRepository;
 
-    public SpectaclesController(ISpectacleRepository spectacleRepository)
-    {
-        _spectacleRepository = spectacleRepository;
-    }
-
+    #region CRUD operations
     [HttpPost("create")]
     public async Task<IActionResult> Create(SpectacleCreateDto spectacleDto)
     {
@@ -69,15 +67,13 @@ public class SpectaclesController : ControllerBase
         return Ok();
     }
 
-    [HttpGet("with-budget/{budget}")]
-    public async Task<IEnumerable<Spectacle>> GetByBudget(decimal budget)
-        => await _spectacleRepository.GetSpectaclesWithBudgetGreaterThan(budget);
+    #endregion
 
-    [HttpGet("with-production-year/{productionYear}")]
-    public async Task<IEnumerable<Spectacle>> GetByProductionDate(int productionYear)
-        => await _spectacleRepository.GetSpectaclesWithProductionDate(productionYear);
+    [HttpGet("with-total-info/{minTotalPrice}")]
+    public async Task<IEnumerable<SpectacleTotalDto>> GetTotalSpectaclesInfo(decimal minTotalPrice)
+        => await _spectacleRepository.GetTotalSpectaclesInfo(minTotalPrice);
 
-    [HttpGet("with-prefix/{prefix}")]
-    public async Task<IEnumerable<Spectacle>> GetByNameStartsWith(string prefix)
-        => await _spectacleRepository.GetSpectaclesByNameStartsWith(prefix);
+    [HttpGet("with-actor-agency-name/{spectacleId}")]
+    public async Task<IEnumerable<ActorWithAgencyInfo>> GetActorsOfSpecta5cle(long spectacleId)
+     => await _spectacleRepository.GetActorsWithAgencyName(spectacleId);
 }

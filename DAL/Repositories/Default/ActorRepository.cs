@@ -2,7 +2,6 @@
 using DatabaseLab.DAL.Interfaces;
 using DatabaseLab.Domain.Dtos.ActorDtos;
 using DatabaseLab.Domain.Entities;
-using DatabaseLab.Domain.Enums;
 using DatabaseLab.Domain.Options;
 using Microsoft.Extensions.Options;
 using System.Data.SqlClient;
@@ -38,91 +37,6 @@ public class ActorRepository(IOptions<DbOptions> dbOptions) :
         return rowsAffected > 0;
     }
 
-    public async Task<IEnumerable<Actor>> GetActorsWithExperience(int experienceYears)
-    {
-        const string sqlQuery = "SELECT * FROM Actors " +
-            "WHERE Experience >= @ExperienceYears " +
-            "ORDER BY Experience";
-
-        using var connection = CreateConnection() as SqlConnection;
-
-        if (connection is null)
-        {
-            return [];
-        }
-
-        await connection.OpenAsync();
-
-        using var command = new SqlCommand(sqlQuery, connection);
-        command.Parameters.AddWithValue("@ExperienceYears", experienceYears);
-
-        using var reader = await command.ExecuteReaderAsync();
-        var actors = new List<Actor>();
-
-        while (await reader.ReadAsync())
-        {
-            actors.Add(new Actor().FromReader(reader));
-        }
-
-        return actors;
-    }
-
-    public async Task<IEnumerable<Actor>> GetActorsWithRank(ActorRank actorRank)
-    {
-        const string sqlQuery = "SELECT * FROM Actors WHERE Rank = @Rank";
-
-        using var connection = CreateConnection() as SqlConnection;
-
-        if (connection is null)
-        {
-            return [];
-        }
-
-        await connection.OpenAsync();
-
-        using var command = new SqlCommand(sqlQuery, connection);
-        command.Parameters.AddWithValue("@Rank", (int)actorRank);
-
-        using var reader = await command.ExecuteReaderAsync();
-        var actors = new List<Actor>();
-
-        while (await reader.ReadAsync())
-        {
-            actors.Add(new Actor().FromReader(reader));
-        }
-
-        return actors;
-    }
-
-    public async Task<IEnumerable<Actor>> GetBySurnamePrefix(string prefix)
-    {
-        const string sqlQuery = @"
-            SELECT * FROM Actors 
-            WHERE LastName LIKE @SearchString";
-
-        using var connection = CreateConnection() as SqlConnection;
-
-        if (connection is null)
-        {
-            return [];
-        }
-
-        await connection.OpenAsync();
-
-        using var command = new SqlCommand(sqlQuery, connection);
-        command.Parameters.AddWithValue("@SearchString", prefix + "%");
-
-        using var reader = await command.ExecuteReaderAsync();
-        var actors = new List<Actor>();
-
-        while (await reader.ReadAsync())
-        {
-            actors.Add(new Actor().FromReader(reader));
-        }
-
-        return actors;
-    }
-
     public async Task<IEnumerable<ActorContractInfoDto>> GetActorWithContractsInfo(
         decimal minAverageConractPrice)
     {
@@ -139,7 +53,7 @@ public class ActorRepository(IOptions<DbOptions> dbOptions) :
         HAVING AVG(c.AnnualContractPrice) >= @MinAveragePrice
         ORDER BY AverageContractPrice DESC";
 
-        using var connection = CreateConnection() as SqlConnection;
+        using var connection = CreateConnection();
 
         if (connection is null)
         {
@@ -197,4 +111,6 @@ public class ActorRepository(IOptions<DbOptions> dbOptions) :
 
         return actors;
     }
+
+    
 }

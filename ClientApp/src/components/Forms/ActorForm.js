@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useAsyncError } from 'react-router-dom';
 
 const ActorForm = ({ onActorCreated, actorToUpdate, onActorUpdated }) => {
     const [id, setId] = useState(null);
@@ -8,6 +9,7 @@ const ActorForm = ({ onActorCreated, actorToUpdate, onActorUpdated }) => {
     const [rank, setRank] = useState('Junior');
     const [experience, setExperience] = useState(0);
     const [errors, setErrors] = useState({});
+    const [agencyId, setAgencyId] = useState(null);
 
     useEffect(() => {
         if (actorToUpdate) {
@@ -17,6 +19,7 @@ const ActorForm = ({ onActorCreated, actorToUpdate, onActorUpdated }) => {
             setMiddleName(actorToUpdate.middleName || '');
             setRank(actorToUpdate.rank);
             setExperience(actorToUpdate.experience);
+            setAgencyId(actorToUpdate.agencyId);
         }
     }, [actorToUpdate]);
 
@@ -29,6 +32,7 @@ const ActorForm = ({ onActorCreated, actorToUpdate, onActorUpdated }) => {
             middleName,
             rank,
             experience: parseInt(experience, 10),
+            agencyId
         };
 
         const response = id 
@@ -67,6 +71,7 @@ const ActorForm = ({ onActorCreated, actorToUpdate, onActorUpdated }) => {
         setRank('Junior');
         setExperience(0);
         setErrors({});
+        setAgencyId(null);
     };
 
     return (

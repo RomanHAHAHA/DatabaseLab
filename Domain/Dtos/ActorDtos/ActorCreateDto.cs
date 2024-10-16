@@ -24,6 +24,8 @@ public class ActorCreateDto
     [Range(0, 100)]
     public int Experience { get; set; }
 
+    public long? AgencyId { get; set; }
+
     public Actor ToEntity()
     {
         return new Actor
@@ -32,7 +34,8 @@ public class ActorCreateDto
             LastName = LastName,
             MiddleName = MiddleName,
             Rank = Rank,
-            Experience = Experience
+            Experience = Experience,
+            AgencyId = AgencyId
         };
     }
 

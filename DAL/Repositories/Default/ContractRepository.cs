@@ -1,5 +1,6 @@
 ﻿using DatabaseLab.DAL.Abstractions;
 using DatabaseLab.DAL.Interfaces;
+using DatabaseLab.Domain.Dtos.ContractDtos;
 using DatabaseLab.Domain.Entities;
 using DatabaseLab.Domain.Options;
 using Microsoft.Extensions.Options;
@@ -11,10 +12,23 @@ public class ContractRepository(IOptions<DbOptions> dbOptions) :
     BaseRepository<Contract>(dbOptions.Value.ConnectionString),
     IContractRepository
 {
-    public async Task<IEnumerable<Contract>> GetContractsOfActor(long actorId)
+    public async Task<IEnumerable<ContractCountOfYear>> GetContractsOfYear(int year)
     {
-        const string sqlQuery = "SELECT * FROM Contracts WHERE ActorId = @ActorId";
-        var contracts = new List<Contract>();
+        const string sqlQuery = @"
+        SELECT 
+            ag.Id AS AgencyId,
+            ag.Name AS AgencyName, 
+            COUNT(c.Id) AS ContractCount, 
+            SUM(c.AnnualContractPrice) AS TotalContractValue 
+        FROM Agencies ag
+        JOIN Actors a ON ag.Id = a.AgencyId 
+        JOIN Contracts c ON a.Id = c.ActorId 
+        JOIN Spectacles s ON c.SpectacleId = s.Id 
+        WHERE s.ProductionDate = @ProductionDate 
+        GROUP BY ag.Id, ag.Name 
+        ORDER BY ContractCount";
+
+        var contracts = new List<ContractCountOfYear>();
 
         using var connection = CreateConnection();
 
@@ -26,101 +40,12 @@ public class ContractRepository(IOptions<DbOptions> dbOptions) :
         await connection.OpenAsync();
 
         using var command = new SqlCommand(sqlQuery, connection);
-        command.Parameters.AddWithValue("@ActorId", actorId);
+        command.Parameters.AddWithValue("@ProductionDate", year);
 
         using var reader = await command.ExecuteReaderAsync();
         while (await reader.ReadAsync())
         {
-            var contract = new Contract().FromReader(reader);
-
-            contracts.Add(contract);
-        }
-
-        return contracts;
-    }
-
-    public async Task<IEnumerable<Contract>> GetContractsOfSpectacle(long spectacleId)
-    {
-        const string sqlQuery = "SELECT * FROM Contracts " +
-            "WHERE SpectacleId = @SpectacleId " +
-            "ORDER BY AnnualContractPrice DESC";
-        var contracts = new List<Contract>();
-
-        using var connection = CreateConnection() as SqlConnection;
-
-        if (connection is null)
-        {
-            return [];
-        }
-
-        await connection.OpenAsync();
-
-        using var command = new SqlCommand(sqlQuery, connection);
-        command.Parameters.AddWithValue("@SpectacleId", spectacleId);
-
-        using var reader = await command.ExecuteReaderAsync();
-        while (await reader.ReadAsync())
-        {
-            var contract = new Contract().FromReader(reader);
-
-            contracts.Add(contract);
-        }
-
-        return contracts;
-    }
-
-    public async Task<IEnumerable<Contract>> GetConractsWithPrice(decimal yearPrice)
-    {
-        const string sqlQuery = "SELECT * FROM Contracts " +
-            "WHERE AnnualContractPrice <= @AnnualContractPrice " +
-            "ORDER BY AnnualContractPrice DESC";
-        var contracts = new List<Contract>();
-
-        using var connection = CreateConnection();
-
-        if (connection is null)
-        {
-            return [];
-        }
-
-        await connection.OpenAsync();
-
-        using var command = new SqlCommand(sqlQuery, connection);
-        command.Parameters.AddWithValue("@AnnualContractPrice", yearPrice);
-
-        using var reader = await command.ExecuteReaderAsync();
-        while (await reader.ReadAsync())
-        {
-            var contract = new Contract().FromReader(reader);
-
-            contracts.Add(contract);
-        }
-
-        return contracts;
-    }
-
-    public async Task<IEnumerable<Contract>> GetContractsWithRolePrefix(string rolePrefix)
-    {
-        const string sqlQuery = "SELECT * FROM Contracts WHERE Role LIKE @RolePrefix";
-        var contracts = new List<Contract>();
-
-        using var connection = CreateConnection();
-
-        if (connection is null)
-        {
-            return [];
-        }
-
-        await connection.OpenAsync();
-
-        using var command = new SqlCommand(sqlQuery, connection);
-        command.Parameters.AddWithValue("@RolePrefix", rolePrefix + "%");
-
-        using var reader = await command.ExecuteReaderAsync();
-        while (await reader.ReadAsync())
-        {
-            var contract = new Contract().FromReader(reader);
-            contracts.Add(contract);
+            contracts.Add(ContractCountOfYear.FromReader(reader));
         }
 
         return contracts;

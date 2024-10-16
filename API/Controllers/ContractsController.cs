@@ -12,6 +12,7 @@ public class ContractsController(
 {
     private readonly IContractRepository _contractRepository = contractRepository;
 
+    #region CRUD operations
     [HttpPost("create")]
     public async Task<IActionResult> Create(ContractCreateDto contractDto)
     {
@@ -78,20 +79,9 @@ public class ContractsController(
 
         return Ok();
     }
+    #endregion
 
-    [HttpGet("with-price/{price}")]
-    public async Task<IEnumerable<Contract>> GetByPrice(decimal price)
-        => await _contractRepository.GetConractsWithPrice(price);
-
-    [HttpGet("with-role/{role}")]
-    public async Task<IEnumerable<Contract>> GetByRole(string role)
-        => await _contractRepository.GetContractsWithRolePrefix(role);
-
-    [HttpGet("of-author/{actorId}")]
-    public async Task<IEnumerable<Contract>> GetByActor(long actorId)
-        => await _contractRepository.GetContractsOfActor(actorId);
-
-    [HttpGet("of-spectacle/{spectacleId}")]
-    public async Task<IEnumerable<Contract>> GetBySpectacle(long spectacleId)
-        => await _contractRepository.GetContractsOfSpectacle(spectacleId);
+    [HttpGet("in-each-agency/{year}")]
+    public async Task<IEnumerable<ContractCountOfYear>> GetCountOfAgencyContracts(int year)
+        => await _contractRepository.GetContractsOfYear(year);
 }

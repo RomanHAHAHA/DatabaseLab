@@ -1,11 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import ActorDetailForm from '../components/Forms/ActorDetailForm';
-import { Table, Button } from 'reactstrap';
+import ActorDetailsTable from '../components/Tables/ActorDetailsTable';
+import TableGenerator from '../components/Helpers/TableGenerator';
+import { Button, Input } from 'reactstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 const ActorDetails = () => {
     const [actorDetails, setActorDetails] = useState([]);
     const [detailToEdit, setDetailToEdit] = useState(null);
+    const [agencyId, setAgencyId] = useState('');
+    const [filteredData, setFilteredData] = useState([]);
 
     const fetchAllActorDetails = async () => {
         try {
@@ -17,6 +21,19 @@ const ActorDetails = () => {
             setActorDetails(data);
         } catch (error) {
             console.error('Error fetching actor details:', error);
+        }
+    };
+
+    const fetchActorsByAgencyId = async (id) => {
+        try {
+            const response = await fetch(`/api/actor-details/by-agency/${id}`, { method: 'GET' });
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            const data = await response.json();
+            setFilteredData(data); 
+        } catch (error) {
+            console.error('Error fetching actors by agency ID:', error);
         }
     };
 
@@ -40,6 +57,14 @@ const ActorDetails = () => {
         setDetailToEdit(detail);
     };
 
+    const handleFetchActorsByAgency = () => {
+        fetchActorsByAgencyId(agencyId);
+    };
+
+    const handleFormReset = () => {
+        setDetailToEdit(null); 
+    };
+
     return (
         <div className="container mt-4">
             <div className="row">
@@ -47,38 +72,32 @@ const ActorDetails = () => {
                     <ActorDetailForm
                         detailToUpdate={detailToEdit}
                         onDetailCreated={fetchAllActorDetails}
-                        onDetailUpdated={fetchAllActorDetails}
+                        onDetailUpdated={() => {
+                            fetchAllActorDetails();
+                            handleFormReset(); 
+                        }}
                     />
                 </div>
                 <div className="col-md-8">
                     <h4>Actor Details List</h4>
-
-                    <Table striped bordered>
-                        <thead>
-                            <tr>
-                                <th>ActorId</th>
-                                <th>Email</th>
-                                <th>Phone</th>
-                                <th>Birthday</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {actorDetails.map(detail => (
-                                <tr key={detail.actorId}>
-                                    <td>{detail.actorId}</td>
-                                    <td>{detail.email}</td>
-                                    <td>{detail.phone}</td>
-                                    <td>{new Date(detail.birthday).toLocaleDateString()}</td>
-                                    <td>
-                                        <Button onClick={() => handleEditDetail(detail)} color="info">Update</Button>
-                                        <Button onClick={() => deleteDetail(detail.actorId)} color="danger">Delete</Button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </Table>
+                    <ActorDetailsTable
+                        actorDetails={actorDetails}
+                        onEdit={handleEditDetail}
+                        onDelete={deleteDetail}
+                    />
                 </div>
+            </div>
+            <div className="mt-4">
+                <h4>Actors by Agency</h4>
+                <Input 
+                    type="number" 
+                    value={agencyId} 
+                    onChange={(e) => setAgencyId(e.target.value)} 
+                    placeholder="Enter Agency ID" 
+                />
+                <Button onClick={handleFetchActorsByAgency} color="primary" className="mt-2">Fetch Actors</Button>
+                
+                <TableGenerator data={filteredData} /> 
             </div>
         </div>
     );
