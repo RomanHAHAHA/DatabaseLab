@@ -1,9 +1,7 @@
 ﻿using DatabaseLab.DAL.Interfaces;
 using DatabaseLab.Domain.Dtos.ActorDtos;
 using DatabaseLab.Domain.Entities;
-using DatabaseLab.Domain.Enums;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ActionConstraints;
 
 namespace DatabaseLab.API.Controllers;
 
@@ -117,12 +115,19 @@ public class ActorsController(
         return Ok();
     }
 
-    [HttpGet("with-contract-data/{minAverageConractPrice}")]
-    public async Task<IEnumerable<ActorContractInfoDto>> GetActorsWithContractsData(
-        decimal minAverageConractPrice)
-        => await _actorRepository.GetActorWithContractsInfo(minAverageConractPrice);
+    [HttpGet("with-contract-data")]
+    public async Task<IEnumerable<ActorContractInfoDto>> GetActorsWithContractsData()
+        => await _actorRepository.GetActorWithContractsInfo();
 
-    [HttpGet("with-private-data")]
-    public async Task<IEnumerable<ActorDataDto>> GetActorsWithPrivateData()
-        => await _actorRepository.GetActorsData();
+    [HttpGet("with-private-data/{birthday}")]
+    public async Task<IEnumerable<ActorDataDto>> GetActorsWithPrivateData(DateTime birthday)
+        => await _actorRepository.GetActorsData(birthday);
+    
+    [HttpGet("with-spectacles-count/{count}")]
+    public async Task<IEnumerable<ActorSpectaclesCount>> GetActorsWithSpectaclesCount(int count)
+        => await _actorRepository.GetActorsWithSpectaclesCount(count);
+
+    [HttpGet("born-in-month/{month}")]
+    public async Task<IEnumerable<ActorWithBirthday>> GetActorsBornInMonth(int month)
+        => await _actorRepository.GetActorsBornInMonth(month);
 }

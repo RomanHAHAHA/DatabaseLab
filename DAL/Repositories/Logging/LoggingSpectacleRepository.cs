@@ -48,13 +48,13 @@ public class LoggingSpectacleRepository(
         return result;
     }
 
-    public async Task<IEnumerable<SpectacleTotalDto>> GetTotalSpectaclesInfo(decimal minTotalPrice)
+    public async Task<IEnumerable<SpectacleTotalDto>> GetWithTotalContractPrice()
     {
         var collection = await _spectacleRepository
-            .GetTotalSpectaclesInfo(minTotalPrice);
+            .GetWithTotalContractPrice();
 
         await _reportService.LogToCacheAsync(
-            nameof(GetTotalSpectaclesInfo), 
+            nameof(GetWithTotalContractPrice), 
             collection);
 
         return collection;
@@ -66,7 +66,31 @@ public class LoggingSpectacleRepository(
             .GetActorsWithAgencyName(spectacleId);
 
         await _reportService.LogToCacheAsync(
-            nameof(GetTotalSpectaclesInfo), 
+            nameof(GetActorsWithAgencyName), 
+            collection);
+
+        return collection;
+    }
+
+    public async Task<IEnumerable<SpectacleWithActors>> GetSpectacleActors()
+    {
+        var collection = await _spectacleRepository
+            .GetSpectacleActors();
+
+        await _reportService.LogToCacheAsync(
+            nameof(GetSpectacleActors),
+            collection);
+
+        return collection;
+    }
+
+    public async Task<IEnumerable<TotalSpectaclesBudget>> GetSpectaclesWithTotalBudget()
+    {
+        var collection = await _spectacleRepository
+            .GetSpectaclesWithTotalBudget();
+
+        await _reportService.LogToCacheAsync(
+            nameof(GetSpectaclesWithTotalBudget),
             collection);
 
         return collection;

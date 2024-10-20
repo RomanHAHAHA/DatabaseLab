@@ -1,29 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import AgencyForm from '../components/Forms/AgencyForm';
-import { Dropdown, DropdownToggle, DropdownMenu, DropdownItem, Table, Button, Input } from 'reactstrap';
-import 'bootstrap/dist/css/bootstrap.min.css';
+import TableGenerator from '../components/Helpers/TableGenerator'; // Ensure this import is correct
+import { Button, InputGroup, Input } from 'reactstrap';
 
 const Agencies = () => {
     const [agencies, setAgencies] = useState([]);
+    const [filteredData, setFilteredData] = useState([]);
     const [agencyToEdit, setAgencyToEdit] = useState(null);
-    const [dropdownOpen, setDropdownOpen] = useState(null);
-    const [agencyId, setAgencyId] = useState(''); 
-    const [actorGroups, setActorGroups] = useState([]); 
-
-    const toggleDropdown = (agencyId) => {
-        setDropdownOpen(prev => (prev === agencyId ? null : agencyId));
-    };
+    const [agencyId, setAgencyId] = useState('');
 
     const fetchAgencies = async () => {
         try {
-            const response = await fetch('/api/agencies/get-all', { method: 'GET' });
-            if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
-            }
+            const response = await fetch('/api/agencies/get-all');
+            if (!response.ok) throw new Error('Failed to fetch agencies');
             const data = await response.json();
             setAgencies(data);
         } catch (error) {
-            console.error('Error fetching agencies:', error);
+            console.error(error);
         }
     };
 
@@ -34,12 +27,10 @@ const Agencies = () => {
     const deleteAgency = async (id) => {
         try {
             const response = await fetch(`/api/agencies/delete/${id}`, { method: 'DELETE' });
-            if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
-            }
-            setAgencies(prevAgencies => prevAgencies.filter(agency => agency.id !== id));
+            if (!response.ok) throw new Error('Failed to delete agency');
+            setAgencies(prev => prev.filter(agency => agency.id !== id));
         } catch (error) {
-            console.error('Error deleting agency:', error);
+            console.error(error);
         }
     };
 
@@ -47,30 +38,29 @@ const Agencies = () => {
         setAgencyToEdit(agency);
     };
 
-    const handleAgencyUpdated = () => {
-        fetchAgencies();
-        setAgencyToEdit(null);
-    };
-
-    const handleCreateAgency = () => {
-        fetchAgencies();
-    };
-
     const fetchActorGroups = async () => {
         if (!agencyId) {
-            alert('Please enter an agency ID.');
+            console.error('Agency ID is required');
             return;
         }
-
         try {
-            const response = await fetch(`/api/agencies/with-actor-groups/${agencyId}`, { method: 'GET' });
-            if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
-            }
+            const response = await fetch(`/api/agencies/with-actor-groups/${agencyId}`);
+            if (!response.ok) throw new Error('Failed to fetch actor groups');
             const data = await response.json();
-            setActorGroups(data);
+            setFilteredData(data); // Set filtered data with actor groups
         } catch (error) {
-            console.error('Error fetching actor groups:', error);
+            console.error(error);
+        }
+    };
+
+    const fetchMaxMinSpectacleBudget = async () => {
+        try {
+            const response = await fetch('/api/agencies/with-max-min-spectacle-budget');
+            if (!response.ok) throw new Error('Failed to fetch max/min spectacle budget');
+            const data = await response.json();
+            setFilteredData(data); // Set filtered data with max/min budget
+        } catch (error) {
+            console.error(error);
         }
     };
 
@@ -80,85 +70,31 @@ const Agencies = () => {
                 <div className="col-md-4">
                     <h1 className="mb-4">{agencyToEdit ? 'Update Agency' : 'Create a New Agency'}</h1>
                     <AgencyForm
-                        onAgencyCreated={handleCreateAgency}
+                        onAgencyCreated={fetchAgencies}
                         agencyToEdit={agencyToEdit}
-                        onAgencyUpdated={handleAgencyUpdated}
+                        onAgencyUpdated={fetchAgencies}
                     />
                 </div>
-
                 <div className="col-md-8">
-                    <h2>Agencies List</h2>
-                    {agencies.length === 0 ? (
-                        <p>No agencies available.</p>
-                    ) : (
-                        <Table striped bordered>
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Name</th>
-                                    <th>Email</th>
-                                    <th>Phone</th>
-                                    <th>Address</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {agencies.map(agency => (
-                                    <tr key={agency.id}>
-                                        <td>{agency.id}</td>
-                                        <td>{agency.name}</td>
-                                        <td>{agency.email}</td>
-                                        <td>{agency.phone}</td>
-                                        <td>{agency.address}</td>
-                                        <td>
-                                            <Dropdown isOpen={dropdownOpen === agency.id} toggle={() => toggleDropdown(agency.id)}>
-                                                <DropdownToggle caret>
-                                                    Actions
-                                                </DropdownToggle>
-                                                <DropdownMenu>
-                                                    <DropdownItem onClick={() => handleEditAgency(agency)}>Update</DropdownItem>
-                                                    <DropdownItem onClick={() => deleteAgency(agency.id)}>Delete</DropdownItem>
-                                                </DropdownMenu>
-                                            </Dropdown>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </Table>
-                    )}
+                    <h4>Agencies List</h4>
+                    <TableGenerator data={agencies} handleEdit={handleEditAgency} deleteAgency={deleteAgency} /> 
 
-                   <div className="mt-4">
-                        <h3>Fetch Actor Groups</h3>
+                    <h4>Fetch Actor Groups</h4>
+                    <InputGroup className="mb-3">
                         <Input 
                             type="number" 
                             placeholder="Enter Agency ID" 
                             value={agencyId} 
                             onChange={(e) => setAgencyId(e.target.value)} 
                         />
-                        <Button color="primary" onClick={fetchActorGroups} className="mt-2">Fetch Actor Groups</Button>
-                    </div>
+                        <Button color="primary" onClick={fetchActorGroups}>Load</Button>
+                    </InputGroup>
 
-                    {actorGroups.length > 0 && (
-                        <div className="mt-4">
-                            <h4>Actor Groups</h4>
-                            <Table striped bordered>
-                                <thead>
-                                    <tr>
-                                        <th>Rank</th>
-                                        <th>Actor Count</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {actorGroups.map((group, index) => (
-                                        <tr key={index}>
-                                            <td>{group.rank}</td>
-                                            <td>{group.actorCount}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </Table>
-                        </div>
-                    )}
+                    <h4>Max & Min Spectacle Budget</h4>
+                    <Button color="success" onClick={fetchMaxMinSpectacleBudget}>Load</Button>
+
+                    <h4>Filtered Data</h4>
+                    <TableGenerator data={filteredData} /> 
                 </div>
             </div>
         </div>

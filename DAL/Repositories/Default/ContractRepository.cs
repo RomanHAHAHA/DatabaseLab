@@ -50,4 +50,71 @@ public class ContractRepository(IOptions<DbOptions> dbOptions) :
 
         return contracts;
     }
+
+    public async Task<IEnumerable<ActorContractDto>> GetContractsOfActor(long actorId)
+    {
+        const string sqlQuery = @"
+        SELECT 
+            c.Id AS ContractId,
+            c.Role,
+            c.AnnualContractPrice,
+            (SELECT s.Name FROM Spectacles s WHERE s.Id = c.SpectacleId) AS SpectacleName
+        FROM 
+            Contracts c
+        WHERE 
+            c.ActorId = @ActorId";
+
+        var contracts = new List<ActorContractDto>();
+
+        using var connection = CreateConnection();
+
+        if (connection is null)
+        {
+            return [];
+        }
+
+        await connection.OpenAsync();
+
+        using var command = new SqlCommand(sqlQuery, connection);
+        command.Parameters.AddWithValue("@ActorId", actorId);
+
+        using var reader = await command.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+            contracts.Add(ActorContractDto.FromReader(reader));
+        }
+
+        return contracts;
+    }
+
+    public async Task<IEnumerable<Contract>> GetContractsByAveragePrice()
+    {
+        const string sqlQuery = @"
+        SELECT *
+        FROM 
+            Contracts c
+        WHERE 
+            c.AnnualContractPrice < (SELECT AVG(AnnualContractPrice) FROM Contracts)";
+
+        var contracts = new List<Contract>();
+
+        using var connection = CreateConnection();
+
+        if (connection is null)
+        {
+            return [];
+        }
+
+        await connection.OpenAsync();
+
+        using var command = new SqlCommand(sqlQuery, connection);
+
+        using var reader = await command.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+            contracts.Add(new Contract().FromReader(reader));
+        }
+
+        return contracts;
+    }
 }

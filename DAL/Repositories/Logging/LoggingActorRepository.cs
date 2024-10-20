@@ -11,7 +11,8 @@ public class LoggingActorRepository(
 {
     private readonly IActorRepository _actorRepository = actorRepository;
     private readonly IReportService _reportService = reportService;
-    
+
+    #region CRUD operations
     public async Task<bool> CreateAsync(Actor entity)
     {
         var result = await _actorRepository.CreateAsync(entity);
@@ -51,21 +52,52 @@ public class LoggingActorRepository(
 
         return result;
     }
+    #endregion
 
-    public async Task<IEnumerable<ActorDataDto>> GetActorsData()
+    public async Task<IEnumerable<ActorDataDto>> GetActorsData(DateTime birthday)
     {
-        var collection = await _actorRepository.GetActorsData();
-        await _reportService.LogToCacheAsync(nameof(GetActorsData), collection);
+        var collection = await _actorRepository
+            .GetActorsData(birthday);
+
+        await _reportService.LogToCacheAsync(
+            nameof(GetActorsData), 
+            collection);
 
         return collection;
     }
 
-    public async Task<IEnumerable<ActorContractInfoDto>> GetActorWithContractsInfo(
-        decimal minAveragePrice)
+    public async Task<IEnumerable<ActorContractInfoDto>> GetActorWithContractsInfo()
     {
         var collection = await _actorRepository
-            .GetActorWithContractsInfo(minAveragePrice);
-        await _reportService.LogToCacheAsync(nameof(GetActorWithContractsInfo), collection);
+            .GetActorWithContractsInfo();
+
+        await _reportService.LogToCacheAsync(
+            nameof(GetActorWithContractsInfo), 
+            collection);
+
+        return collection;
+    }
+
+    public async Task<IEnumerable<ActorSpectaclesCount>> GetActorsWithSpectaclesCount(int spectaclesCount)
+    {
+        var collection  = await _actorRepository
+            .GetActorsWithSpectaclesCount(spectaclesCount);
+
+        await _reportService.LogToCacheAsync(
+            nameof(GetActorsWithSpectaclesCount),
+            collection);
+
+        return collection;
+    }
+
+    public async Task<IEnumerable<ActorWithBirthday>> GetActorsBornInMonth(int month)
+    {
+        var collection = await _actorRepository
+            .GetActorsBornInMonth(month);
+
+        await _reportService.LogToCacheAsync(
+            nameof(GetActorsBornInMonth),
+            collection);
 
         return collection;
     }

@@ -37,8 +37,7 @@ public class ActorRepository(IOptions<DbOptions> dbOptions) :
         return rowsAffected > 0;
     }
 
-    public async Task<IEnumerable<ActorContractInfoDto>> GetActorWithContractsInfo(
-        decimal minAverageConractPrice)
+    public async Task<IEnumerable<ActorContractInfoDto>> GetActorWithContractsInfo()
     {
         const string sqlQuery = @"
         SELECT 
@@ -50,7 +49,6 @@ public class ActorRepository(IOptions<DbOptions> dbOptions) :
         FROM Actors a
         JOIN Contracts c ON a.Id = c.ActorId
         GROUP BY a.Id, a.FirstName, a.LastName
-        HAVING AVG(c.AnnualContractPrice) >= @MinAveragePrice
         ORDER BY AverageContractPrice DESC";
 
         using var connection = CreateConnection();
@@ -63,7 +61,6 @@ public class ActorRepository(IOptions<DbOptions> dbOptions) :
         await connection.OpenAsync();
 
         using var command = new SqlCommand(sqlQuery, connection);
-        command.Parameters.AddWithValue("@MinAveragePrice", minAverageConractPrice);
 
         using var reader = await command.ExecuteReaderAsync();
         var actors = new List<ActorContractInfoDto>();
@@ -76,7 +73,7 @@ public class ActorRepository(IOptions<DbOptions> dbOptions) :
         return actors;
     }
 
-    public async Task<IEnumerable<ActorDataDto>> GetActorsData()
+    public async Task<IEnumerable<ActorDataDto>> GetActorsData(DateTime birthday)
     {
         const string sqlQuery = @"
         SELECT 
@@ -88,6 +85,7 @@ public class ActorRepository(IOptions<DbOptions> dbOptions) :
             ad.Birthday
         FROM Actors a
         LEFT JOIN ActorDetails ad ON a.Id = ad.ActorId
+        WHERE ad.Birthday > @Birthday
         ORDER BY ad.Birthday";
 
         using var connection = CreateConnection();
@@ -100,7 +98,7 @@ public class ActorRepository(IOptions<DbOptions> dbOptions) :
         await connection.OpenAsync();
 
         using var command = new SqlCommand(sqlQuery, connection);
-
+        command.Parameters.AddWithValue("@Birthday", birthday);
         using var reader = await command.ExecuteReaderAsync();
         var actors = new List<ActorDataDto>();
 
@@ -112,5 +110,81 @@ public class ActorRepository(IOptions<DbOptions> dbOptions) :
         return actors;
     }
 
-    
+    public async Task<IEnumerable<ActorSpectaclesCount>> GetActorsWithSpectaclesCount(int spectaclesCount)
+    {
+        const string sqlQuery = @"
+        SELECT 
+            a.Id AS ActorId,
+            a.FirstName AS ActorName,
+            COUNT(c.SpectacleId) AS SpectacleCount
+        FROM Actors a
+        JOIN Contracts c ON a.Id = c.ActorId
+        WHERE 
+            c.SpectacleId IN (
+                SELECT SpectacleId 
+                FROM Contracts 
+                WHERE ActorId = a.Id  
+            )
+        GROUP BY a.Id, a.FirstName
+        HAVING COUNT(c.SpectacleId) > 1  
+        ORDER BY SpectacleCount DESC";
+
+        using var connection = CreateConnection();
+
+        if (connection is null)
+        {
+            return [];
+        }
+
+        await connection.OpenAsync();
+
+        using var command = new SqlCommand(sqlQuery, connection);
+        command.Parameters.AddWithValue("@SpectaclesCount", spectaclesCount);
+        using var reader = await command.ExecuteReaderAsync();
+        var actors = new List<ActorSpectaclesCount>();
+
+        while (await reader.ReadAsync())
+        {
+            actors.Add(ActorSpectaclesCount.FromReader(reader));
+        }
+
+        return actors;
+    }
+
+    public async Task<IEnumerable<ActorWithBirthday>> GetActorsBornInMonth(int month)
+    {
+        const string sqlQuery = @"
+        SELECT 
+            a.Id AS ActorId,
+            a.FirstName AS ActorName,
+            ad.Birthday
+        FROM 
+            Actors a
+        JOIN 
+            ActorDetails ad ON a.Id = ad.ActorId
+        WHERE 
+            MONTH(ad.Birthday) = @Month";
+
+        using var connection = CreateConnection();
+
+        if (connection is null)
+        {
+            return [];
+        }
+
+        await connection.OpenAsync();
+
+        using var command = new SqlCommand(sqlQuery, connection);
+        command.Parameters.AddWithValue("@Month", month);
+
+        using var reader = await command.ExecuteReaderAsync();
+        var actors = new List<ActorWithBirthday>();
+
+        while (await reader.ReadAsync())
+        {
+            actors.Add(ActorWithBirthday.FromReader(reader));
+        }
+
+        return actors;
+    }
 }

@@ -13,6 +13,7 @@ public class LoggingContractRepository(
     private readonly IContractRepository _contractRepository = contractRepository;
     private readonly IReportService _reportService = reportService;
 
+    #region CRUD operations
     public async Task<bool> CreateAsync(Contract entity)
     {
         var result = await _contractRepository.CreateAsync(entity);
@@ -47,10 +48,41 @@ public class LoggingContractRepository(
         await _reportService.LogToCacheAsync(nameof(UpdateAsync), result, entity);
         return result;
     }
+    #endregion
+
     public async Task<IEnumerable<ContractCountOfYear>> GetContractsOfYear(int year)
     {
-        var collection = await _contractRepository.GetContractsOfYear(year);
-        await _reportService.LogToCacheAsync(nameof(GetContractsOfYear), collection);
+        var collection = await _contractRepository
+            .GetContractsOfYear(year);
+
+        await _reportService.LogToCacheAsync(
+            nameof(GetContractsOfYear), 
+            collection);
+
+        return collection;
+    }
+
+    public async Task<IEnumerable<ActorContractDto>> GetContractsOfActor(long actorId)
+    {
+        var collection = await _contractRepository
+            .GetContractsOfActor(actorId);
+
+        await _reportService.LogToCacheAsync(
+            nameof(GetContractsOfActor),
+            collection);
+
+        return collection;
+    }
+
+    public async Task<IEnumerable<Contract>> GetContractsByAveragePrice()
+    {
+        var collection = await _contractRepository
+            .GetContractsByAveragePrice();
+
+        await _reportService.LogToCacheAsync(
+            nameof(GetContractsByAveragePrice),
+            collection);
+
         return collection;
     }
 }

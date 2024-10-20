@@ -88,4 +88,7 @@ public class AgenciesController(
     public async Task<IEnumerable<CountOfActorsInRank>> GetActorGroups(long agencyId)
         => await _agencyRepository.GetActorGroups(agencyId);
 
+    [HttpGet("with-max-min-spectacle-budget")]
+    public async Task<IEnumerable<AgencyWithSpectacleBudget>> GetMaxMinSpectaclesBudget()
+        => await _agencyRepository.GetMaxMinSpectacleBudget();
 }

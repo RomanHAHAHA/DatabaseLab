@@ -17,7 +17,7 @@ public class ReportsController(
     {
         var reportData = await _cacheService.GetAllAsync<string>();
 
-        if (reportData == null || reportData.Count == 0)
+        if (reportData is null || reportData.Count == 0)
         {
             return BadRequest(new { message = "No reports found in cache." });
         }

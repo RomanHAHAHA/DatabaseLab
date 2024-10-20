@@ -24,7 +24,9 @@ class TableGenerator extends React.Component {
                     {data.map((row, rowIndex) => (
                         <tr key={rowIndex}>
                             {headers.map((header, index) => (
-                                <td key={index}>{row[header]}</td>
+                                <td key={index}>
+                                    {row[header] === '' ? 'NULL' : row[header]}
+                                </td>
                             ))}
                         </tr>
                     ))}

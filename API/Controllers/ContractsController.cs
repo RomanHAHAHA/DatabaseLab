@@ -84,4 +84,12 @@ public class ContractsController(
     [HttpGet("in-each-agency/{year}")]
     public async Task<IEnumerable<ContractCountOfYear>> GetCountOfAgencyContracts(int year)
         => await _contractRepository.GetContractsOfYear(year);
+
+    [HttpGet("of-actor/{actorId}")]
+    public async Task<IEnumerable<ActorContractDto>> GetContractsOfActor(long actorId)
+        => await _contractRepository.GetContractsOfActor(actorId);
+    
+    [HttpGet("more-than-average-price")]
+    public async Task<IEnumerable<Contract>> GetContractsByAveragePrice()
+        => await _contractRepository.GetContractsByAveragePrice();
 }

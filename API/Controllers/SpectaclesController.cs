@@ -69,11 +69,19 @@ public class SpectaclesController(
 
     #endregion
 
-    [HttpGet("with-total-info/{minTotalPrice}")]
-    public async Task<IEnumerable<SpectacleTotalDto>> GetTotalSpectaclesInfo(decimal minTotalPrice)
-        => await _spectacleRepository.GetTotalSpectaclesInfo(minTotalPrice);
+    [HttpGet("with-total-info")]
+    public async Task<IEnumerable<SpectacleTotalDto>> GetTotalSpectaclesInfo()
+        => await _spectacleRepository.GetWithTotalContractPrice();
 
     [HttpGet("with-actor-agency-name/{spectacleId}")]
     public async Task<IEnumerable<ActorWithAgencyInfo>> GetActorsOfSpecta5cle(long spectacleId)
      => await _spectacleRepository.GetActorsWithAgencyName(spectacleId);
+    
+    [HttpGet("with-actors-experience")]
+    public async Task<IEnumerable<SpectacleWithActors>> GetSpectaclesWithActorsExperience()
+        => await _spectacleRepository.GetSpectacleActors();
+    
+    [HttpGet("with-total-budget")]
+    public async Task<IEnumerable<TotalSpectaclesBudget>> GetTotalSpectaclesbudget()
+        => await _spectacleRepository.GetSpectaclesWithTotalBudget();
 }

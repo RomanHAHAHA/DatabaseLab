@@ -6,7 +6,11 @@ namespace DatabaseLab.DAL.Interfaces;
 
 public interface ISpectacleRepository : IRepository<Spectacle>
 {
-    Task<IEnumerable<SpectacleTotalDto>> GetTotalSpectaclesInfo(decimal minTotalPrice);
+    Task<IEnumerable<SpectacleTotalDto>> GetWithTotalContractPrice();
 
     Task<IEnumerable<ActorWithAgencyInfo>> GetActorsWithAgencyName(long spectacleId);
+
+    Task<IEnumerable<SpectacleWithActors>> GetSpectacleActors();
+
+    Task<IEnumerable<TotalSpectaclesBudget>> GetSpectaclesWithTotalBudget();
 }

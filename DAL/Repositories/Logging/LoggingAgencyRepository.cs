@@ -1,7 +1,7 @@
 ﻿using DatabaseLab.DAL.Interfaces;
 using DatabaseLab.Domain.Dtos.ActorDtos;
+using DatabaseLab.Domain.Dtos.AgencyDtos;
 using DatabaseLab.Domain.Entities;
-using DatabaseLab.Domain.Interfaces;
 using DatabaseLab.Services.Interfaces;
 
 namespace DatabaseLab.DAL.Repositories.Logging;
@@ -13,24 +13,13 @@ public class LoggingAgencyRepository(
     private readonly IAgencyRepository _agencyRepository = agencyRepository;
     private readonly IReportService _reportService = reportService;
 
+    #region CRUD operations
     public async Task<bool> CreateAsync(Agency entity)
     {
         var result = await _agencyRepository.CreateAsync(entity);
         await _reportService.LogToCacheAsync(nameof(CreateAsync), result, entity);
 
         return result;
-    }
-
-    public async Task<IEnumerable<CountOfActorsInRank>> GetActorGroups(long agencyId)
-    {
-        var collection = await _agencyRepository
-            .GetActorGroups(agencyId);
-
-        await _reportService.LogToCacheAsync(
-            nameof(GetActorGroups), 
-            collection);
-
-        return collection;
     }
 
     public async Task<IQueryable<Agency>> GetAllAsync()
@@ -63,5 +52,30 @@ public class LoggingAgencyRepository(
         await _reportService.LogToCacheAsync(nameof(UpdateAsync), result, entity);
 
         return result;
+    }
+    #endregion
+
+    public async Task<IEnumerable<CountOfActorsInRank>> GetActorGroups(long agencyId)
+    {
+        var collection = await _agencyRepository
+            .GetActorGroups(agencyId);
+
+        await _reportService.LogToCacheAsync(
+            nameof(GetActorGroups),
+            collection);
+
+        return collection;
+    }
+
+    public async Task<IEnumerable<AgencyWithSpectacleBudget>> GetMaxMinSpectacleBudget()
+    {
+        var colletion = await _agencyRepository
+            .GetMaxMinSpectacleBudget();
+
+        await _reportService.LogToCacheAsync(
+            nameof(GetMaxMinSpectacleBudget),
+            colletion);
+
+        return colletion;
     }
 }

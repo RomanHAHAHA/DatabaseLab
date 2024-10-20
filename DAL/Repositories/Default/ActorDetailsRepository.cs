@@ -45,11 +45,13 @@ public class ActorDetailsRepository(IOptions<DbOptions> options) :
             a.Id,
             a.FirstName,
             a.LastName,
-            ad.Phone
+            (
+                SELECT ad.Phone
+                FROM ActorDetails ad
+                WHERE ad.ActorId = a.Id
+            ) AS Phone
         FROM 
             Actors a
-        JOIN 
-            ActorDetails ad ON a.Id = ad.ActorId
         WHERE 
             a.AgencyId = @AgencyId";
 

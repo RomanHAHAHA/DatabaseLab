@@ -10,6 +10,7 @@ const Contracts = () => {
     const [contractToEdit, setContractToEdit] = useState(null);
     const [dropdownOpen, setDropdownOpen] = useState(null);
     const [year, setYear] = useState('');
+    const [actorId, setActorId] = useState('');
     const [filteredData, setFilteredData] = useState([]);
 
     const toggleDropdown = (contractId) => {
@@ -42,6 +43,32 @@ const Contracts = () => {
         }
     };
 
+    const fetchContractsOfActor = async (actorId) => {
+        try {
+            const response = await fetch(`/api/contracts/of-actor/${actorId}`, { method: 'GET' });
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            const data = await response.json();
+            setFilteredData(data); 
+        } catch (error) {
+            console.error('Error fetching contracts of actor:', error);
+        }
+    };
+
+    const fetchContractsByAveragePrice = async () => {
+        try {
+            const response = await fetch('/api/contracts/more-than-average-price', { method: 'GET' });
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            const data = await response.json();
+            setFilteredData(data); 
+        } catch (error) {
+            console.error('Error fetching contracts by average price:', error);
+        }
+    };
+
     useEffect(() => {
         fetchContracts();
     }, []);
@@ -50,10 +77,24 @@ const Contracts = () => {
         setYear(event.target.value);
     };
 
+    const handleActorIdChange = (event) => {
+        setActorId(event.target.value);
+    };
+
     const handleFetchFilteredContracts = () => {
         if (year) {
             fetchFilteredContracts(year);
         }
+    };
+
+    const handleFetchContractsOfActor = () => {
+        if (actorId) {
+            fetchContractsOfActor(actorId);
+        }
+    };
+
+    const handleFetchContractsByAveragePrice = () => {
+        fetchContractsByAveragePrice(); 
     };
 
     const deleteContract = async (id) => {
@@ -110,7 +151,7 @@ const Contracts = () => {
                     </div>
 
                     <div>
-                        <h2>Get Contract Counts by Agency for a Year</h2>
+                        <h2>Get contract Counts by agency for a year</h2>
                         <Input
                             type="number"
                             placeholder="Enter Year"
@@ -118,11 +159,31 @@ const Contracts = () => {
                             onChange={handleYearChange}
                         />
                         <Button color="primary" onClick={handleFetchFilteredContracts} className="mt-2">
-                            Fetch Contracts
+                            Load
                         </Button>
-
-                        <TableGenerator data={filteredData} />
                     </div>
+
+                    <div>
+                        <h2>Get Contracts for an Actor</h2>
+                        <Input
+                            type="number"
+                            placeholder="Enter Actor ID"
+                            value={actorId}
+                            onChange={handleActorIdChange}
+                        />
+                        <Button color="primary" onClick={handleFetchContractsOfActor} className="mt-2">
+                            Load
+                        </Button>
+                    </div>
+
+                    <div>
+                        <h2>Get Contracts Above Average Price</h2>
+                        <Button color="primary" onClick={handleFetchContractsByAveragePrice} className="mt-2">
+                            Load
+                        </Button>
+                    </div>
+                    
+                    <TableGenerator data={filteredData} />
                 </div>
             </div>
         </div>

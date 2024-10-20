@@ -8,7 +8,6 @@ const Spectacles = () => {
     const [spectacles, setSpectacles] = useState([]);
     const [filteredData, setFilteredData] = useState([]); 
     const [spectacleToEdit, setSpectacleToEdit] = useState(null);
-    const [minAveragePrice, setMinAveragePrice] = useState('');
     const [spectacleId, setSpectacleId] = useState('');
 
     const fetchAllSpectacles = async () => {
@@ -28,7 +27,7 @@ const Spectacles = () => {
 
     const fetchSpectaclesWithMinPrice = async () => {
         try {
-            const response = await fetch(`/api/spectacles/with-total-info/${minAveragePrice}`);
+            const response = await fetch(`/api/spectacles/with-total-info`);
             if (!response.ok) throw new Error('Failed to fetch spectacles with minimum price');
             const data = await response.json();
             setFilteredData(data); 
@@ -45,6 +44,28 @@ const Spectacles = () => {
         try {
             const response = await fetch(`/api/spectacles/with-actor-agency-name/${spectacleId}`);
             if (!response.ok) throw new Error('Failed to fetch spectacles with additional data');
+            const data = await response.json();
+            setFilteredData(data); 
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    const fetchSpectaclesWithActorsExperience = async () => {
+        try {
+            const response = await fetch(`/api/spectacles/with-actors-experience`);
+            if (!response.ok) throw new Error('Failed to fetch spectacles with actors experience');
+            const data = await response.json();
+            setFilteredData(data); 
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    const fetchTotalSpectaclesBudget = async () => {
+        try {
+            const response = await fetch(`/api/spectacles/with-total-budget`);
+            if (!response.ok) throw new Error('Failed to fetch total spectacles budget');
             const data = await response.json();
             setFilteredData(data); 
         } catch (error) {
@@ -84,19 +105,14 @@ const Spectacles = () => {
                         deleteSpectacle={deleteSpectacle} 
                     />
 
-                    <h4>Spectacles with Minimum Price</h4>
+                    <h4>Spectacles with contracts count</h4>
                     <InputGroup className="mb-3" size="sm">
-                        <Input
-                            placeholder="Min Average Price"
-                            value={minAveragePrice}
-                            onChange={e => setMinAveragePrice(e.target.value)}
-                        />
                         <Button color="primary" onClick={fetchSpectaclesWithMinPrice}>
-                            Load Spectacles with Minimum Price
+                            Load
                         </Button>
                     </InputGroup>
 
-                    <h4>Spectacle ID</h4>
+                    <h4>Actors of spectacle with contract data</h4>
                     <InputGroup className="mb-3" size="sm">
                         <Input
                             placeholder="Spectacle ID"
@@ -104,7 +120,21 @@ const Spectacles = () => {
                             onChange={e => setSpectacleId(e.target.value)}
                         />
                         <Button color="secondary" onClick={fetchSpectaclesWithAdditionalData}>
-                            Load Spectacles with Additional Data
+                            Load
+                        </Button>
+                    </InputGroup>
+
+                    <h4>Spectacles with actors average Experience</h4>
+                    <InputGroup className="mb-3" size="sm">
+                        <Button color="info" onClick={fetchSpectaclesWithActorsExperience}>
+                            Load 
+                        </Button>
+                    </InputGroup>
+
+                    <h4>Total spectacles budget for each year</h4>
+                    <InputGroup className="mb-3" size="sm">
+                        <Button color="warning" onClick={fetchTotalSpectaclesBudget}>
+                            Load
                         </Button>
                     </InputGroup>
 

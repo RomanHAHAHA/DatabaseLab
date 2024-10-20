@@ -13,6 +13,8 @@ const context =  [
   "/api/actors/with-private-data",
   "/api/actors/add-to-agency",
   "/api/actors/with-max-contract-price",
+  "/api/actors/with-spectacles-count",
+  "/api/actors/born-in-month",
 
   "/api/spectacles/update",
   "/api/spectacles/delete",
@@ -20,12 +22,16 @@ const context =  [
   "/api/spectacles/get-all",
   "/api/spectacles/with-total-info",
   "/api/spectacles/with-actor-agency-name",
+  "/api/spectacles/with-actors-experience",
+  "/api/spectacles/with-total-budget",
 
   "/api/contracts/update",
   "/api/contracts/delete",
   "/api/contracts/create",
   "/api/contracts/get-all",
   "/api/contracts/in-each-agency",
+  "/api/contracts/of-actor",
+  "/api/contracts/more-than-average-price",
 
   "/api/actor-details/create",
   "/api/actor-details/update",
@@ -38,6 +44,7 @@ const context =  [
   "/api/agencies/delete",
   "/api/agencies/get-all",
   "/api/agencies/with-actor-groups",
+  "/api/agencies/with-max-min-spectacle-budget",
 
   "/api/reports/generate-report",
 ];

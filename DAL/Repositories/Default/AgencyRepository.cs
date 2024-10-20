@@ -5,6 +5,7 @@ using Microsoft.Extensions.Options;
 using System.Data.SqlClient;
 using DatabaseLab.DAL.Abstractions;
 using DatabaseLab.Domain.Dtos.ActorDtos;
+using DatabaseLab.Domain.Dtos.AgencyDtos;
 
 namespace DatabaseLab.DAL.Repositories.Default;
 
@@ -70,5 +71,40 @@ public class AgencyRepository(IOptions<DbOptions> dbOptions) :
         return actorGroups;
     }
 
-    
+    public async Task<IEnumerable<AgencyWithSpectacleBudget>> GetMaxMinSpectacleBudget()
+    {
+        const string sqlQuery = @"
+        SELECT 
+            a.Name AS AgencyName,
+            MAX(s.Budget) AS MaxSpectacleBudget,  
+            MIN(s.Budget) AS MinSpectacleBudget   
+        FROM Agencies a
+        JOIN Actors ac ON a.Id = ac.AgencyId
+        JOIN Contracts c ON ac.Id = c.ActorId
+        JOIN Spectacles s ON c.SpectacleId = s.Id
+        GROUP BY a.Name
+        ORDER BY MaxSpectacleBudget DESC";
+
+        using var connection = CreateConnection();
+
+        if (connection is null)
+        {
+            return [];
+        }
+
+        await connection.OpenAsync();
+
+        using var command = connection.CreateCommand();
+        command.CommandText = sqlQuery;
+
+        using var reader = await command.ExecuteReaderAsync();
+        var actorGroups = new List<AgencyWithSpectacleBudget>();
+
+        while (await reader.ReadAsync())
+        {
+            actorGroups.Add(AgencyWithSpectacleBudget.FromReader(reader));
+        }
+
+        return actorGroups;
+    }
 }
