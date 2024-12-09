@@ -166,7 +166,7 @@ public class SpectacleRepository(IOptions<DbOptions> dbOptions) :
             SUM(s.Budget) AS TotalBudget
         FROM 
             Spectacles s
-        JOIN 
+        LEFT JOIN 
             Contracts c ON s.Id = c.SpectacleId
         GROUP BY 
             s.ProductionDate

@@ -2,7 +2,7 @@
 
 public interface IPdfGenerator
 {
-    string GenerateHtmlReport(List<string> reportData);
+    string GenerateHtmlReport(string reportData);
 
     byte[] GeneratePdfFromHtml(string htmlContent);
 }

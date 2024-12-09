@@ -36,10 +36,10 @@ export class NavMenu extends Component {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'Report.pdf'; 
-        document.body.appendChild(a); 
-        a.click(); 
-        a.remove(); 
+        a.download = 'Reports.zip'; 
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
       } else {
         console.error('Failed to download report');
       }

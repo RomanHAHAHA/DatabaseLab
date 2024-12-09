@@ -94,7 +94,7 @@ public class ContractRepository(IOptions<DbOptions> dbOptions) :
         FROM 
             Contracts c
         WHERE 
-            c.AnnualContractPrice < (SELECT AVG(AnnualContractPrice) FROM Contracts)";
+            c.AnnualContractPrice > (SELECT AVG(AnnualContractPrice) FROM Contracts)";
 
         var contracts = new List<Contract>();
 
